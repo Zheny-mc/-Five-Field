@@ -49,34 +49,6 @@ void five_field::set_empty_place()
     }
 }
 
-bool five_field::is_win_user(INT_VECTOR_2D& field)
-{
-    for (int y = 2*SIZE_PETAL; y < 3*SIZE_PETAL; ++y)
-    {
-        for (int x = SIZE_PETAL; x < 2*SIZE_PETAL; ++x)
-        {
-            if (field[y][x] != USER) 
-                return false;
-        }
-    }
-
-    return true;    
-}
-
-bool five_field::is_win_computer(INT_VECTOR_2D& field)
-{
-    for (int y = SIZE_PETAL; y < 2*SIZE_PETAL; ++y)
-    {
-        for (int x = 2*SIZE_PETAL; x < 3*SIZE_PETAL; ++x)
-        {
-            if (field[y][x] != COMPUTER) 
-                return false;
-        }
-    }
-
-    return true;   
-}
-
 bool five_field::is_check_borders(int y_i, int x_i)
 {
         //преведение индексов к номерам
@@ -93,7 +65,24 @@ bool five_field::is_check_borders(int y_i, int x_i)
         return false;
 }
 
-bool five_field::is_move_player(checker_pos& first_pos, checker_pos& second_pos)
+void five_field::swap(int& first_pos, int& second_pos)
+{
+    int tmp = first_pos;
+    first_pos = second_pos;
+    second_pos = tmp;
+}
+
+int five_field::max(int left_num, int right_num) 
+{ 
+    return (left_num > right_num)? left_num : right_num; 
+}
+
+int five_field::min(int left_num, int right_num) 
+{ 
+    return (left_num > right_num)?  right_num : left_num; 
+}
+
+bool five_field::is_move_player(Checker_pos& first_pos, Checker_pos& second_pos)
 {
     if ( ! (is_check_borders(first_pos.y, first_pos.x) && 
             is_check_borders(second_pos.y, second_pos.x)) )
@@ -183,12 +172,390 @@ bool five_field::is_move_player(checker_pos& first_pos, checker_pos& second_pos)
     }
 }
 
+Checker_pos five_field::define_down_pos(Checker_pos position, bool is_type_player)
+{
+    int offset = 1;
+    const int type_player = is_type_player? COMPUTER : USER;
+
+    if ( is_check_borders(position.y + offset, position.x) )
+    {
+        int place = map[position.y + offset][position.x];
+
+        if (place == type_player)
+        {
+            for (offset++; is_check_borders(position.y + offset, position.x) && 
+                            map[position.y + offset][position.x] == type_player; 
+                    offset++);
+            
+            if ( is_check_borders(position.y + offset, position.x) && 
+                    map[position.y + offset][position.x] == EMPTY )
+                position.y += offset;
+        }                
+        else if (place == EMPTY)
+            position.y += offset;
+    }
+
+    return position;
+}
+
+Checker_pos five_field::define_up_pos(Checker_pos position, bool is_type_player)
+{
+    int offset = 1;
+    const int type_player = is_type_player? COMPUTER : USER;
+
+    if ( is_check_borders(position.y-offset, position.x) )
+    {
+        int place = map[position.y - offset][position.x];
+        
+        if (place == type_player)
+        {
+            for (offset--; is_check_borders(position.y-offset, position.x) && 
+                            map[position.y - offset][position.x] == type_player; 
+                offset--);
+            
+            if ( is_check_borders(position.y-offset, position.x) && 
+                 map[position.y - offset][position.x] == EMPTY)
+                position.y -= offset;
+        }
+        else if (place == EMPTY)
+            position.y -= offset;
+    }
+
+    return position;
+}
+
+Checker_pos five_field::define_right_pos(Checker_pos position, bool is_type_player)
+{
+    int offset = 1;
+    const int type_player = is_type_player? COMPUTER : USER;
+
+    if ( is_check_borders(position.y, position.x + offset) )
+    {
+        int place = map[position.y][position.x + offset];
+
+        if (place == type_player)
+        {
+            for (offset++; is_check_borders(position.y, position.x + offset) && 
+                            map[position.y][position.x + offset] == type_player; 
+                offset++);
+            
+            if ( is_check_borders(position.y, position.x + offset) && 
+                    map[position.y][position.x + offset] == EMPTY)
+                position.x += offset;
+        }
+        else if (place == EMPTY)
+            position.x += offset;
+    }
+
+    return position;
+}
+
+Checker_pos five_field::define_left_pos(Checker_pos position, bool is_type_player)
+{
+    int offset = 1;
+    const int type_player = is_type_player? COMPUTER : USER;
+
+    if ( is_check_borders(position.y, position.x - offset) )
+    {
+        int place = map[position.y][position.x - offset];
+
+        if (place == type_player)
+        {
+            for (offset--; is_check_borders(position.y, position.x - offset) && 
+                            map[position.y][position.x - offset] == type_player; 
+                offset--);
+            
+            if ( is_check_borders(position.y, position.x - offset) && 
+                    map[position.y][position.x - offset] == EMPTY)
+                position.x -= offset;
+        }                
+        else if (place == EMPTY)
+            position.x -= offset;
+    }
+
+    return position;
+}
+
+bool five_field::is_can_move(Checker_pos& first_pos, Checker_pos& second_pos)
+{
+    return (first_pos.x != second_pos.x || first_pos.y != second_pos.y);
+}
+
+void five_field::do_move(int i_checker, Checker_pos& first_pos, Checker_pos& second_pos)
+{
+    map[first_pos.y][first_pos.x] = EMPTY;
+    map[second_pos.y][second_pos.x] = COMPUTER;
+
+    coor_computer[COOR_Y][i_checker] = second_pos.y;
+    coor_computer[COOR_X][i_checker] = second_pos.x;
+}
+
+int five_field::get_user_Heur_Eval(INT_VECTOR_2D& coor_white_player)
+{
+    int eval = 0;
+
+    for (int i = 0; i < coor_white_player[0].size(); ++i)
+    {
+        //Если позиция находиться в карте и там нет черной шашки
+        //(Down)
+        if ( is_check_borders(coor_white_player[COOR_Y][i] + 1, coor_white_player[COOR_X][i]) && 
+             map[ coor_white_player[COOR_Y][i] + 1][ coor_white_player[COOR_X][i] ] != COMPUTER )
+        {
+            int offset = 1; //смещение шашки по шашкам
+            if ( map[ coor_white_player[COOR_Y][i]+offset ][ coor_white_player[COOR_X][i] ] == USER )
+            {
+                for (offset++; is_check_borders(coor_white_player[COOR_Y][i]+offset, coor_white_player[COOR_X][i]) && 
+                             map[ coor_white_player[COOR_Y][i]+offset ][ coor_white_player[COOR_X][i] ] == USER; 
+                offset++);
+            }
+
+            if ( is_check_borders(coor_white_player[COOR_Y][i]+offset, coor_white_player[COOR_X][i]) && 
+                 map[ coor_white_player[COOR_Y][i]+offset ][ coor_white_player[COOR_X][i] ] == EMPTY )
+                eval += WHITE_PRICE_MOVE_DOWN;
+        }
+
+        //(RIGHT)
+        if ( is_check_borders(coor_white_player[COOR_Y][i], coor_white_player[COOR_X][i] + 1) && 
+             map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i] + 1 ] != COMPUTER )
+        {
+            int offset = 1; //смещение шашки по шашкам
+            
+            if ( map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i]+offset ] == USER )
+            {
+                for (offset++; is_check_borders(coor_white_player[COOR_Y][i], coor_white_player[COOR_X][i]+offset) &&
+                                map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i]+offset ] == USER; 
+                    offset++);
+            }
+
+            if ( is_check_borders(coor_white_player[COOR_Y][i], coor_white_player[COOR_X][i]+offset) && 
+                 map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i]+offset ] == EMPTY)
+                eval += WHITE_PRICE_MOVE_RIGHT;
+        }
+
+        //(LEFT)
+        if ( is_check_borders(coor_white_player[COOR_Y][i], coor_white_player[COOR_X][i] - 1) && 
+             map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i] - 1 ] != COMPUTER )
+        {
+            int offset = -1; //смещение шашки по шашкам
+            
+            if ( map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i]+offset ] == USER )
+            {
+                for (offset--; is_check_borders(coor_white_player[COOR_Y][i], coor_white_player[COOR_X][i]+offset) &&
+                                map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i]+offset ] == USER; 
+                    offset--);
+            }
+
+            if ( is_check_borders(coor_white_player[COOR_Y][i], coor_white_player[COOR_X][i]+offset) && 
+                 map[ coor_white_player[COOR_Y][i] ][ coor_white_player[COOR_X][i]+offset ] == EMPTY)
+                eval += WHITE_PRICE_MOVE_LEFT;
+        }
+    }
+
+    return eval;
+}
+
+int five_field::get_computer_heur_eval(INT_VECTOR_2D& coor_black_player)
+{
+    int eval = 0;
+
+    for (int i = 0; i < coor_black_player[0].size(); ++i)
+    {
+        //Если позиция находиться в карте и там нет черной шашки
+        //(Down)
+        if ( is_check_borders(coor_black_player[COOR_Y][i] + 1, coor_black_player[COOR_X][i]) && 
+             map[ coor_black_player[COOR_Y][i] + 1][ coor_black_player[COOR_X][i] ] != USER)
+        {
+            int offset = 1; //смещение шашки по шашкам
+            
+            if ( map[ coor_black_player[COOR_Y][i]+offset ][ coor_black_player[COOR_X][i] ] == COMPUTER )
+            {
+                for (offset++; is_check_borders(coor_black_player[COOR_Y][i]+offset, coor_black_player[COOR_X][i]) && 
+                                map[ coor_black_player[COOR_Y][i]+offset ][ coor_black_player[COOR_X][i] ] == COMPUTER; 
+                    offset++);
+            }
+
+            if ( is_check_borders(coor_black_player[COOR_Y][i]+offset, coor_black_player[COOR_X][i]) && 
+                 map[ coor_black_player[COOR_Y][i]+offset ][ coor_black_player[COOR_X][i] ] == EMPTY )
+                eval += BLACK_PRICE_MOVE_DOWN;
+        }
+       
+        //(UP)
+        if ( is_check_borders(coor_black_player[COOR_Y][i]-1, coor_black_player[COOR_X][i]) && 
+             map[ coor_black_player[COOR_Y][i] - 1 ][ coor_black_player[COOR_X][i] ] != USER)
+        {
+            int offset = -1; //смещение шашки по шашкам
+            
+            if ( map[ coor_black_player[COOR_Y][i]+offset ][ coor_black_player[COOR_X][i] ] == COMPUTER )
+            {
+                for (offset--; is_check_borders(coor_black_player[COOR_Y][i]+offset, coor_black_player[COOR_X][i]) && 
+                                map[ coor_black_player[COOR_Y][i]+offset ][ coor_black_player[COOR_X][i] ] == COMPUTER;
+                    offset--);
+            }
+
+            if ( is_check_borders(coor_black_player[COOR_Y][i]+offset, coor_black_player[COOR_X][i]) && 
+                 map[ coor_black_player[COOR_Y][i]+offset ][ coor_black_player[COOR_X][i] ] == EMPTY)
+                eval += BLACK_PRICE_MOVE_UP;
+        }
+      
+        //(RIGHT)
+        if ( is_check_borders(coor_black_player[COOR_Y][i], coor_black_player[COOR_X][i] + 1) && 
+             map[ coor_black_player[COOR_Y][i] ][ coor_black_player[COOR_X][i] + 1 ] != USER)
+        {
+            int offset = 1; //смещение шашки по шашкам
+
+            if ( map[ coor_black_player[COOR_Y][i] ][ coor_black_player[COOR_X][i]+offset ] == COMPUTER )
+            {
+                for (offset++; is_check_borders(coor_black_player[COOR_Y][i], coor_black_player[COOR_X][i]+offset) &&
+                             map[ coor_black_player[COOR_Y][i] ][ coor_black_player[COOR_X][i]+offset ] == COMPUTER; 
+                offset++);
+            }
+
+            if ( is_check_borders(coor_black_player[COOR_Y][i], coor_black_player[COOR_X][i]+offset) && 
+                 map[ coor_black_player[COOR_Y][i] ][ coor_black_player[COOR_X][i]+offset ] == EMPTY )
+                eval += BLACK_PRICE_MOVE_RIGHT;
+        }
+    }
+    
+    return eval;
+}
+
+int five_field::getHeuristicEvaluation()
+{
+    return get_computer_heur_eval(coor_computer) - get_user_Heur_Eval(coor_player);
+} 
+
+int five_field::run_minimax(bool is_type_moster, int depth)
+{
+    if (is_win_user())//или шашка юзера попала в свою зону
+        return getHeuristicEvaluation();
+    if (is_win_computer())//или шашка компьютра попала в свою зону
+        return getHeuristicEvaluation();
+
+    //выбираем ход который нам выгодней
+    if (is_type_moster)
+    {
+        //ход
+        Checker_pos first_pos;
+        Checker_pos second_pos;
+
+        for (int i_checker = 0; i_checker < NUM_CHECKER; i_checker++)
+        {
+            first_pos.y = coor_computer[COOR_Y][i_checker];
+            first_pos.x = coor_computer[COOR_X][i_checker];
+
+            //вправо
+            second_pos = define_right_pos(first_pos, IS_COMPUTER);
+            if (is_can_move(first_pos, second_pos))
+            {
+                //хожу
+                do_move(i_checker, first_pos, second_pos);
+                show();
+                //считаю
+                int score = run_minimax(MIN, depth+1);
+                //  отменяй ход
+                do_move(i_checker, second_pos, first_pos);
+                //сравниваю
+                best_score = max(best_score, score);
+            }
+
+            //вниз
+            second_pos = define_down_pos(first_pos, IS_COMPUTER);
+            if (is_can_move(first_pos, second_pos))
+            {
+                //хожу
+                do_move(i_checker, first_pos, second_pos);
+                //считаю
+                int score = run_minimax(MIN, depth+1);
+                //  отменяй ход
+                do_move(i_checker, second_pos, first_pos);
+                //сравниваю
+                best_score = max(best_score, score);
+            }
+
+            //вверх
+            second_pos = define_up_pos(first_pos, IS_COMPUTER);
+            if (is_can_move(first_pos, second_pos))
+            {
+                //хожу
+                do_move(i_checker, first_pos, second_pos);
+                //считаю
+                int score = run_minimax(MIN, depth+1);
+                //  отменяй ход
+                do_move(i_checker, second_pos, first_pos);
+                //сравниваю
+                best_score = max(best_score, score);
+            }
+        }
+    }
+    //противник выбираем ход, который нам не выгоден нам
+    else
+    {
+        //ход
+        Checker_pos first_pos;
+        Checker_pos second_pos;
+
+        for (int i_checker = 0; i_checker < NUM_CHECKER; i_checker++)
+        {
+            first_pos.y = coor_computer[COOR_Y][i_checker];
+            first_pos.x = coor_computer[COOR_X][i_checker];
+
+            //вниз
+            second_pos = define_down_pos(first_pos, IS_USER);
+            if (is_can_move(first_pos, second_pos))
+            {
+                //хожу
+                do_move(i_checker, first_pos, second_pos);
+                show();
+                //считаю
+                int score = run_minimax(MAX, depth+1);
+                //  отменяй ход
+                do_move(i_checker, second_pos, first_pos);
+                //сравниваю
+                best_score = min(best_score, score);
+            }
+
+            //вправо
+            second_pos = define_right_pos(first_pos, IS_USER);
+            if (is_can_move(first_pos, second_pos))
+            {
+                //хожу
+                do_move(i_checker, first_pos, second_pos);
+                //считаю
+                int score = run_minimax(MAX, depth+1);
+                //  отменяй ход
+                do_move(i_checker, second_pos, first_pos);
+                //сравниваю
+                best_score = min(best_score, score);
+            }
+
+            //влево
+            second_pos = define_left_pos(first_pos, IS_USER);
+            if (is_can_move(first_pos, second_pos))
+            {
+                //хожу
+                do_move(i_checker, first_pos, second_pos);
+                //считаю
+                int score = run_minimax(MAX, depth+1);
+                //  отменяй ход
+                do_move(i_checker, second_pos, first_pos);
+                //сравниваю
+                best_score = min(best_score, score);
+            }
+        }
+    }
+
+    return best_score;
+}
+
+
 //**************************************public*********************************************
 five_field::five_field(int _SIZE_MAP) : SIZE_MAP(_SIZE_MAP), 
-                                        SIZE_PETAL(SIZE_MAP / 3), 
+                                        SIZE_PETAL(SIZE_MAP / 3),
+                                        NUM_CHECKER(SIZE_PETAL * SIZE_PETAL), 
                                         map(SIZE_MAP, vector<int>(SIZE_MAP)),
                                         coor_player(2),
-                                        coor_computer(2)
+                                        coor_computer(2),
+                                        best_score(-512)
 { 
     set_units();
     set_empty_place(); 
@@ -198,26 +565,37 @@ five_field::five_field(int _SIZE_MAP) : SIZE_MAP(_SIZE_MAP),
 
 bool five_field::is_win_user()
 {
-    return is_win_user(map);
+    for (int y = 2*SIZE_PETAL; y < 3*SIZE_PETAL; ++y)
+    {
+        for (int x = SIZE_PETAL; x < 2*SIZE_PETAL; ++x)
+        {
+            if (map[y][x] != USER) 
+                return false;
+        }
+    }
+
+    return true; 
 }
 
 bool five_field::is_win_computer()
 {
-    return is_win_computer(map);
-}
+    for (int y = SIZE_PETAL; y < 2*SIZE_PETAL; ++y)
+    {
+        for (int x = 2*SIZE_PETAL; x < 3*SIZE_PETAL; ++x)
+        {
+            if (map[y][x] != COMPUTER) 
+                return false;
+        }
+    }
 
-void five_field::swap(int& first_pos, int& second_pos)
-{
-    int tmp = first_pos;
-    first_pos = second_pos;
-    second_pos = tmp;
+    return true;
 }
 
 void five_field::move_player()
 //ход игрока
 {
-    checker_pos first_pos; 
-    checker_pos second_pos;
+    Checker_pos first_pos; 
+    Checker_pos second_pos;
     
     while (true)
     {
@@ -231,6 +609,89 @@ void five_field::move_player()
         else 
             cout << "Try again!" << endl; 
     }
+}
+
+void five_field::move_computer()
+{
+    Move_PC move;
+    int score;
+    int ind_best_checker;
+    //ход
+    Checker_pos first_pos;
+    Checker_pos second_pos;
+
+    for (int i_checker = 0; i_checker < NUM_CHECKER; i_checker++)
+    {
+        first_pos.y = coor_computer[COOR_Y][i_checker];
+        first_pos.x = coor_computer[COOR_X][i_checker];
+
+        //вниз
+        second_pos = define_down_pos(first_pos, IS_COMPUTER);
+        if (is_can_move(first_pos, second_pos))
+        {
+            //хожу
+            do_move(i_checker, first_pos, second_pos);
+            //считаю
+            score = run_minimax(MIN, 0);
+            //  отменяй ход
+            do_move(i_checker, second_pos, first_pos);
+            //сравниваю
+            if (score > best_score)
+            {
+                best_score = score;
+                //запоминаю ход
+                move.checker = first_pos;
+                move.move_checker = second_pos;
+                ind_best_checker = i_checker;
+            }
+        }
+
+        //вверх
+        second_pos = define_up_pos(first_pos, IS_COMPUTER);
+        if (is_can_move(first_pos, second_pos))
+        {
+            //хожу
+            do_move(i_checker, first_pos, second_pos);
+            //считаю
+            score = run_minimax(MIN, 0);
+            //  отменяй ход
+            do_move(i_checker, second_pos, first_pos);
+            //сравниваю
+            if (score > best_score)
+            {
+                best_score = score;
+                //запоминаю ход
+                move.checker = first_pos;
+                move.move_checker = second_pos;
+                ind_best_checker = i_checker;
+            }
+        }
+
+        //вправо
+        second_pos = define_right_pos(first_pos, IS_COMPUTER);
+        if (is_can_move(first_pos, second_pos))
+        {
+            //хожу
+            do_move(i_checker, first_pos, second_pos);
+            show();
+            //считаю
+            score = run_minimax(MIN, 0);
+            //  отменяй ход
+            do_move(i_checker, second_pos, first_pos);
+            //сравниваю
+            if (score > best_score)
+            {
+                best_score = score;
+                //запоминаю ход
+                move.checker = first_pos;
+                move.move_checker = second_pos;
+                ind_best_checker = i_checker;
+            }
+        }
+    }
+
+    //делай ход move
+    do_move(ind_best_checker, move.checker, move.move_checker);
 }
 
 void five_field::show()
