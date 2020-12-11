@@ -35,7 +35,10 @@ using std::setw;
 #define IS_USER false
 #define IS_COMPUTER true
 
+#define MAX_DEPTH 2
     
+#define NOT_INITIALIZE -512
+
 class Checker_pos
 {
 public:
@@ -48,6 +51,12 @@ class Move_PC
 public:
     Checker_pos checker;
     Checker_pos move_checker; 
+
+    Move_PC()
+    {
+        checker.x = move_checker.x = 0;
+        checker.x = move_checker.x = 0;
+    }
 };
 
 class five_field
@@ -62,7 +71,8 @@ private:
     INT_VECTOR_2D coor_computer; 
     int best_score;
 
-private:
+public:
+//private:
     //************для конструктора**************
     void set_units();
     void set_empty_place(); 
@@ -72,9 +82,10 @@ private:
     void swap(int& first_pos, int& second_pos);
     int max(int left_num, int right_num);
     int min(int left_num, int right_num);
+    int find_num_check(Checker_pos& first_pos);
     //****************************************
     
-    bool is_move_player(Checker_pos& first_pos, Checker_pos& second_pos);
+    bool is_move_player(int num_checker, Checker_pos& first_pos, Checker_pos& second_pos);
     
     //***************вспомогательный ф-и для minimax********************************
     Checker_pos define_down_pos(Checker_pos position, bool is_type_player);
@@ -84,7 +95,7 @@ private:
 
     bool is_can_move(Checker_pos& first_pos, Checker_pos& second_pos);
     
-    void do_move(int i_checker, Checker_pos& first_pos, Checker_pos& second_pos);
+    void do_move(bool is_type_player, int i_checker, Checker_pos& first_pos, Checker_pos& second_pos);
     
     int get_computer_heur_eval(INT_VECTOR_2D& coor_black_player);
     int get_user_Heur_Eval(INT_VECTOR_2D& coor_white_player);
@@ -95,7 +106,7 @@ private:
     //минимакс
     int run_minimax(bool is_type_moster, int depth);//-
 
-public:
+//public:
     five_field(int _SIZE_MAP);
 
     bool is_win_user();

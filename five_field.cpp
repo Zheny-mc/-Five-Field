@@ -82,7 +82,7 @@ int five_field::min(int left_num, int right_num)
     return (left_num > right_num)?  right_num : left_num; 
 }
 
-bool five_field::is_move_player(Checker_pos& first_pos, Checker_pos& second_pos)
+bool five_field::is_move_player(int num_checker, Checker_pos& first_pos, Checker_pos& second_pos)
 {
     if ( ! (is_check_borders(first_pos.y, first_pos.x) && 
             is_check_borders(second_pos.y, second_pos.x)) )
@@ -115,7 +115,7 @@ bool five_field::is_move_player(Checker_pos& first_pos, Checker_pos& second_pos)
             if ( first_pos.x == second_pos.x && (abs(second_pos.y - first_pos.y) == 1) ||
                  first_pos.y == second_pos.y && (abs(second_pos.x - first_pos.x) == 1) )
             {
-                swap(map[second_pos.y][second_pos.x], map[first_pos.y][first_pos.x]);
+                do_move(IS_USER, num_checker-1, first_pos, second_pos);
                 return true;
             }
 
@@ -140,7 +140,7 @@ bool five_field::is_move_player(Checker_pos& first_pos, Checker_pos& second_pos)
                     }
                 }
 
-                swap(map[second_pos.y][second_pos.x], map[first_pos.y][first_pos.x]);
+                do_move(IS_USER, num_checker-1, first_pos, second_pos);
                 return true;
             }
             else if (first_pos.y == second_pos.y)
@@ -164,7 +164,7 @@ bool five_field::is_move_player(Checker_pos& first_pos, Checker_pos& second_pos)
                     }
                 }
 
-                swap(map[second_pos.y][second_pos.x], map[first_pos.y][first_pos.x]);
+                do_move(IS_USER, num_checker-1, first_pos, second_pos);
                 return true;
             }
 
@@ -177,7 +177,9 @@ Checker_pos five_field::define_down_pos(Checker_pos position, bool is_type_playe
     int offset = 1;
     const int type_player = is_type_player? COMPUTER : USER;
 
-    if ( is_check_borders(position.y + offset, position.x) )
+    if ( is_check_borders(position.y + offset, position.x) && 
+       ( map[position.y + offset][position.x] == type_player ||
+         map[position.y + offset][position.x] == EMPTY) )
     {
         int place = map[position.y + offset][position.x];
 
@@ -186,6 +188,7 @@ Checker_pos five_field::define_down_pos(Checker_pos position, bool is_type_playe
             for (offset++; is_check_borders(position.y + offset, position.x) && 
                             map[position.y + offset][position.x] == type_player; 
                     offset++);
+            
             
             if ( is_check_borders(position.y + offset, position.x) && 
                     map[position.y + offset][position.x] == EMPTY )
@@ -203,7 +206,9 @@ Checker_pos five_field::define_up_pos(Checker_pos position, bool is_type_player)
     int offset = 1;
     const int type_player = is_type_player? COMPUTER : USER;
 
-    if ( is_check_borders(position.y-offset, position.x) )
+    if ( is_check_borders(position.y-offset, position.x) && 
+       ( map[position.y - offset][position.x] == type_player ||
+         map[position.y - offset][position.x] == EMPTY)  )
     {
         int place = map[position.y - offset][position.x];
         
@@ -229,7 +234,9 @@ Checker_pos five_field::define_right_pos(Checker_pos position, bool is_type_play
     int offset = 1;
     const int type_player = is_type_player? COMPUTER : USER;
 
-    if ( is_check_borders(position.y, position.x + offset) )
+    if ( is_check_borders(position.y, position.x + offset) && 
+       ( map[position.y][position.x + offset] == type_player ||
+         map[position.y][position.x + offset] == EMPTY) )
     {
         int place = map[position.y][position.x + offset];
 
@@ -238,7 +245,7 @@ Checker_pos five_field::define_right_pos(Checker_pos position, bool is_type_play
             for (offset++; is_check_borders(position.y, position.x + offset) && 
                             map[position.y][position.x + offset] == type_player; 
                 offset++);
-            
+
             if ( is_check_borders(position.y, position.x + offset) && 
                     map[position.y][position.x + offset] == EMPTY)
                 position.x += offset;
@@ -255,7 +262,9 @@ Checker_pos five_field::define_left_pos(Checker_pos position, bool is_type_playe
     int offset = 1;
     const int type_player = is_type_player? COMPUTER : USER;
 
-    if ( is_check_borders(position.y, position.x - offset) )
+    if ( is_check_borders(position.y, position.x - offset) && 
+       ( map[position.y][position.x - offset] == type_player ||
+         map[position.y][position.x - offset] == EMPTY) )
     {
         int place = map[position.y][position.x - offset];
 
@@ -265,6 +274,7 @@ Checker_pos five_field::define_left_pos(Checker_pos position, bool is_type_playe
                             map[position.y][position.x - offset] == type_player; 
                 offset--);
             
+
             if ( is_check_borders(position.y, position.x - offset) && 
                     map[position.y][position.x - offset] == EMPTY)
                 position.x -= offset;
@@ -281,13 +291,22 @@ bool five_field::is_can_move(Checker_pos& first_pos, Checker_pos& second_pos)
     return (first_pos.x != second_pos.x || first_pos.y != second_pos.y);
 }
 
-void five_field::do_move(int i_checker, Checker_pos& first_pos, Checker_pos& second_pos)
-{
-    map[first_pos.y][first_pos.x] = EMPTY;
-    map[second_pos.y][second_pos.x] = COMPUTER;
+void five_field::do_move(bool is_type_player, int i_checker, Checker_pos& first_pos, Checker_pos& second_pos)
+{ 
+    if (is_type_player == IS_COMPUTER)
+    {
+        map[second_pos.y][second_pos.x] = COMPUTER;
+        coor_computer[COOR_Y][i_checker] = second_pos.y;
+        coor_computer[COOR_X][i_checker] = second_pos.x;
+    }
+    else if (is_type_player == IS_USER)
+    {
+        map[second_pos.y][second_pos.x] = USER;
+        coor_player[COOR_Y][i_checker] = second_pos.y;
+        coor_player[COOR_X][i_checker] = second_pos.x;
+    }
 
-    coor_computer[COOR_Y][i_checker] = second_pos.y;
-    coor_computer[COOR_X][i_checker] = second_pos.x;
+    map[first_pos.y][first_pos.x] = EMPTY;
 }
 
 int five_field::get_user_Heur_Eval(INT_VECTOR_2D& coor_white_player)
@@ -431,6 +450,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
     if (is_win_computer())//или шашка компьютра попала в свою зону
         return getHeuristicEvaluation();
 
+    if (depth == MAX_DEPTH )
+        return getHeuristicEvaluation();
+
+    int _best_score = NOT_INITIALIZE;
+
     //выбираем ход который нам выгодней
     if (is_type_moster)
     {
@@ -442,20 +466,21 @@ int five_field::run_minimax(bool is_type_moster, int depth)
         {
             first_pos.y = coor_computer[COOR_Y][i_checker];
             first_pos.x = coor_computer[COOR_X][i_checker];
-
+            
             //вправо
             second_pos = define_right_pos(first_pos, IS_COMPUTER);
             if (is_can_move(first_pos, second_pos))
             {
                 //хожу
-                do_move(i_checker, first_pos, second_pos);
+                do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
                 show();
                 //считаю
                 int score = run_minimax(MIN, depth+1);
                 //  отменяй ход
-                do_move(i_checker, second_pos, first_pos);
+                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+                show();
                 //сравниваю
-                best_score = max(best_score, score);
+                _best_score = max(best_score, score);
             }
 
             //вниз
@@ -463,13 +488,15 @@ int five_field::run_minimax(bool is_type_moster, int depth)
             if (is_can_move(first_pos, second_pos))
             {
                 //хожу
-                do_move(i_checker, first_pos, second_pos);
+                do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
+                show();
                 //считаю
                 int score = run_minimax(MIN, depth+1);
                 //  отменяй ход
-                do_move(i_checker, second_pos, first_pos);
+                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+                show();
                 //сравниваю
-                best_score = max(best_score, score);
+                _best_score = max(best_score, score);
             }
 
             //вверх
@@ -477,13 +504,15 @@ int five_field::run_minimax(bool is_type_moster, int depth)
             if (is_can_move(first_pos, second_pos))
             {
                 //хожу
-                do_move(i_checker, first_pos, second_pos);
+                do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
+                show();
                 //считаю
                 int score = run_minimax(MIN, depth+1);
                 //  отменяй ход
-                do_move(i_checker, second_pos, first_pos);
+                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+                show();
                 //сравниваю
-                best_score = max(best_score, score);
+                _best_score = max(best_score, score);
             }
         }
     }
@@ -496,57 +525,70 @@ int five_field::run_minimax(bool is_type_moster, int depth)
 
         for (int i_checker = 0; i_checker < NUM_CHECKER; i_checker++)
         {
-            first_pos.y = coor_computer[COOR_Y][i_checker];
-            first_pos.x = coor_computer[COOR_X][i_checker];
+            first_pos.y = coor_player[COOR_Y][i_checker];
+            first_pos.x = coor_player[COOR_X][i_checker];
 
             //вниз
-            second_pos = define_down_pos(first_pos, IS_USER);
+            second_pos = define_down_pos(first_pos, IS_USER); //ошибка определения позиции
             if (is_can_move(first_pos, second_pos))
             {
                 //хожу
-                do_move(i_checker, first_pos, second_pos);
+                do_move(IS_USER, i_checker, first_pos, second_pos);
                 show();
                 //считаю
                 int score = run_minimax(MAX, depth+1);
                 //  отменяй ход
-                do_move(i_checker, second_pos, first_pos);
+                do_move(IS_USER, i_checker, second_pos, first_pos);
+                show();
                 //сравниваю
-                best_score = min(best_score, score);
+                _best_score = min(best_score, score);
             }
-
+            
             //вправо
             second_pos = define_right_pos(first_pos, IS_USER);
             if (is_can_move(first_pos, second_pos))
             {
                 //хожу
-                do_move(i_checker, first_pos, second_pos);
+                do_move(IS_USER, i_checker, first_pos, second_pos);
+                show();
                 //считаю
                 int score = run_minimax(MAX, depth+1);
                 //  отменяй ход
-                do_move(i_checker, second_pos, first_pos);
+                do_move(IS_USER, i_checker, second_pos, first_pos);
+                show();
                 //сравниваю
-                best_score = min(best_score, score);
+                _best_score = min(best_score, score);
             }
-
+            
             //влево
             second_pos = define_left_pos(first_pos, IS_USER);
             if (is_can_move(first_pos, second_pos))
             {
                 //хожу
-                do_move(i_checker, first_pos, second_pos);
+                do_move(IS_USER, i_checker, first_pos, second_pos);
+                show();
                 //считаю
                 int score = run_minimax(MAX, depth+1);
                 //  отменяй ход
-                do_move(i_checker, second_pos, first_pos);
+                do_move(IS_USER, i_checker, second_pos, first_pos);
+                show();
                 //сравниваю
-                best_score = min(best_score, score);
+                _best_score = min(best_score, score);
             }
+            
         }
     }
 
-    return best_score;
-}
+    if (_best_score == NOT_INITIALIZE)
+        return getHeuristicEvaluation();
+    
+    //if (depth == 0 && best_score != NOT_INITIALIZE)
+    //{
 
+    //}
+
+    return _best_score;
+}
 
 //**************************************public*********************************************
 five_field::five_field(int _SIZE_MAP) : SIZE_MAP(_SIZE_MAP), 
@@ -555,13 +597,11 @@ five_field::five_field(int _SIZE_MAP) : SIZE_MAP(_SIZE_MAP),
                                         map(SIZE_MAP, vector<int>(SIZE_MAP)),
                                         coor_player(2),
                                         coor_computer(2),
-                                        best_score(-512)
+                                        best_score(NOT_INITIALIZE)
 { 
     set_units();
     set_empty_place(); 
 }
-
-
 
 bool five_field::is_win_user()
 {
@@ -591,20 +631,40 @@ bool five_field::is_win_computer()
     return true;
 }
 
+int five_field::find_num_check(Checker_pos& first_pos)
+{
+    int num_checker;
+
+    for (int i = 0; i < NUM_CHECKER; i++)
+    {
+        if (coor_player[COOR_X][i] == first_pos.x && 
+            coor_player[COOR_Y][i] == first_pos.y)
+            num_checker = i+1; 
+    }
+
+    return num_checker;
+}
+
 void five_field::move_player()
 //ход игрока
 {
-    Checker_pos first_pos; 
-    Checker_pos second_pos;
     
+    Checker_pos first_pos; 
+    int num_cheker;
+    Checker_pos second_pos;
+
     while (true)
     {
         cout << "Input current place: ";
         cin >> first_pos.y >> first_pos.x;
+        
+        num_cheker = find_num_check(first_pos);
+        
         cout << "Input will place: ";
         cin >> second_pos.y >> second_pos.x;
+        
 
-        if (is_move_player(first_pos, second_pos)) 
+        if (is_move_player(num_cheker, first_pos, second_pos)) 
             break;
         else 
             cout << "Try again!" << endl; 
@@ -613,28 +673,56 @@ void five_field::move_player()
 
 void five_field::move_computer()
 {
-    Move_PC move;
-    int score;
-    int ind_best_checker;
     //ход
+    int ind_best_checker = 0;
     Checker_pos first_pos;
     Checker_pos second_pos;
 
+    Move_PC move;
+
+    int score = best_score = NOT_INITIALIZE;
+    
+    
     for (int i_checker = 0; i_checker < NUM_CHECKER; i_checker++)
     {
         first_pos.y = coor_computer[COOR_Y][i_checker];
         first_pos.x = coor_computer[COOR_X][i_checker];
-
+        
+        //вправо
+        second_pos = define_right_pos(first_pos, IS_COMPUTER);
+        if (is_can_move(first_pos, second_pos))
+        {
+            //хожу
+            do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
+            show();
+            //считаю
+            score = run_minimax(MIN, 0);
+            //  отменяй ход
+            do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+            show();
+            //сравниваю
+            if (score > best_score)
+            {
+                best_score = score;
+                //запоминаю ход
+                move.checker = first_pos;
+                move.move_checker = second_pos;
+                ind_best_checker = i_checker;
+            }
+        }
+        
         //вниз
         second_pos = define_down_pos(first_pos, IS_COMPUTER);
         if (is_can_move(first_pos, second_pos))
         {
             //хожу
-            do_move(i_checker, first_pos, second_pos);
+            do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
+            show();
             //считаю
             score = run_minimax(MIN, 0);
             //  отменяй ход
-            do_move(i_checker, second_pos, first_pos);
+            do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+            show();
             //сравниваю
             if (score > best_score)
             {
@@ -651,33 +739,13 @@ void five_field::move_computer()
         if (is_can_move(first_pos, second_pos))
         {
             //хожу
-            do_move(i_checker, first_pos, second_pos);
-            //считаю
-            score = run_minimax(MIN, 0);
-            //  отменяй ход
-            do_move(i_checker, second_pos, first_pos);
-            //сравниваю
-            if (score > best_score)
-            {
-                best_score = score;
-                //запоминаю ход
-                move.checker = first_pos;
-                move.move_checker = second_pos;
-                ind_best_checker = i_checker;
-            }
-        }
-
-        //вправо
-        second_pos = define_right_pos(first_pos, IS_COMPUTER);
-        if (is_can_move(first_pos, second_pos))
-        {
-            //хожу
-            do_move(i_checker, first_pos, second_pos);
+            do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
             show();
             //считаю
             score = run_minimax(MIN, 0);
             //  отменяй ход
-            do_move(i_checker, second_pos, first_pos);
+            do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+            show();
             //сравниваю
             if (score > best_score)
             {
@@ -688,10 +756,11 @@ void five_field::move_computer()
                 ind_best_checker = i_checker;
             }
         }
+        
     }
 
     //делай ход move
-    do_move(ind_best_checker, move.checker, move.move_checker);
+    do_move(IS_COMPUTER, ind_best_checker, move.checker, move.move_checker);
 }
 
 void five_field::show()
