@@ -37,7 +37,9 @@ using std::setw;
 
 #define MAX_DEPTH 2
     
-#define NOT_INITIALIZE -512
+#define NOT_INITIALIZE -254
+#define MIN_VALUE -50
+#define MAX_VALUE 50
 
 class Checker_pos
 {
@@ -49,13 +51,14 @@ public:
 class Move_PC
 {
 public:
+    int ind_checker;
     Checker_pos checker;
     Checker_pos move_checker; 
 
-    Move_PC()
+    Move_PC(int x_y=0)
     {
-        checker.x = move_checker.x = 0;
-        checker.x = move_checker.x = 0;
+        checker.x = move_checker.x = x_y;
+        checker.y = move_checker.y = x_y;
     }
 };
 
@@ -71,6 +74,9 @@ private:
     INT_VECTOR_2D coor_computer; 
     int best_score;
 
+    Checker_pos pos_checker_user;
+    Checker_pos pos_checker_pc;
+
 public:
 //private:
     //************для конструктора**************
@@ -83,6 +89,9 @@ public:
     int max(int left_num, int right_num);
     int min(int left_num, int right_num);
     int find_num_check(Checker_pos& first_pos);
+
+    bool is_be_checker_pc_map(Checker_pos pos);
+    bool is_be_checker_user_map(Checker_pos pos);
     //****************************************
     
     bool is_move_player(int num_checker, Checker_pos& first_pos, Checker_pos& second_pos);

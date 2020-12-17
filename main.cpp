@@ -10,30 +10,17 @@ int main()
     game.show();
     
     //ПОКА не выйграл игрок или компьютер
-    //while ( true )
-    //{
+    while ( true )
+    {
         //ходит компьютер
         game.move_computer();
         game.show();
-    //    if ( game.is_win_computer() ) break;
+        if ( game.is_win_computer() ) break;
         
         game.move_player();
         game.show();
-    //    if ( game.is_win_user() ) break;
-    //}
-
-        game.move_computer();
-        game.show();
-
-        game.move_player();
-        game.show();
-
-        
-        game.move_computer();
-        game.show();
-
-        game.move_player();
-        game.show();
+        if ( game.is_win_user() ) break;
+    }
 
     if ( game.is_win_user() )
         cout << endl << "Win user!" << endl;
