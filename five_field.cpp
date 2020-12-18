@@ -65,13 +65,6 @@ bool five_field::is_check_borders(int y_i, int x_i)
         return false;
 }
 
-void five_field::swap(int& first_pos, int& second_pos)
-{
-    int tmp = first_pos;
-    first_pos = second_pos;
-    second_pos = tmp;
-}
-
 int five_field::max(int left_num, int right_num) 
 { 
     return (left_num > right_num)? left_num : right_num; 
@@ -625,8 +618,7 @@ five_field::five_field(int _SIZE_MAP) : SIZE_MAP(_SIZE_MAP),
                                         NUM_CHECKER(SIZE_PETAL * SIZE_PETAL), 
                                         map(SIZE_MAP, vector<int>(SIZE_MAP)),
                                         coor_player(2),
-                                        coor_computer(2),
-                                        best_score(NOT_INITIALIZE)
+                                        coor_computer(2)
 { 
     set_units();
     set_empty_place(); 
