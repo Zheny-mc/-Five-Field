@@ -10,7 +10,9 @@
             "args": [
                 "-g",
                 "main.cpp",
+                "start_game.h",
                 "five_field.h",
+                "start_game.cpp",
                 "five_field.cpp",
                 "-o",
                 "run"

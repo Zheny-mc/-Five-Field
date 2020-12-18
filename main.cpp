@@ -1,31 +1,25 @@
-#include "five_field.h"
+#include "start_game.h"
 
-#define SIZE 3*2
+#define _PLAY_ 'n'
 
 int main()
 {
-    //создаем карту с параметрами: размер карты
-    five_field game(SIZE);
-    cout << "Game begin" << endl;
-    game.show();
-    
-    //ПОКА не выйграл игрок или компьютер
-    while ( true )
+    try
     {
-        //ходит компьютер
-        game.move_computer();
-        game.show();
-        if ( game.is_win_computer() ) break;
-        
-        game.move_player();
-        game.show();
-        if ( game.is_win_user() ) break;
+        char play = input_be_game();
+
+        if (play == _PLAY_)
+        {
+            int size = input_size();
+            run(size);
+        }
+    }
+    catch(std::exception& e)
+    {
+        cout << e.what() << endl;
     }
 
-    if ( game.is_win_user() )
-        cout << endl << "Win user!" << endl;
-    else 
-        cout << endl << "Win computer!" << endl;
 
     return 0;
 }
+

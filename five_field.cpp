@@ -389,10 +389,10 @@ int five_field::getHeuristicEvaluation()
 {
     int eval_user = get_user_Heur_Eval(coor_player);
     int eval_computer = get_computer_heur_eval(coor_computer);
-    return  eval_computer - eval_user;
+    return  eval_user - eval_computer;
 } 
 
-int five_field::run_minimax(bool is_type_moster, int depth)
+int five_field::run_minimax(bool is_type_moster, int depth, int alpha, int beta)
 {
     int test = NOT_INITIALIZE;
 
@@ -422,8 +422,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                 do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
                 
                 //считаю
-                test = run_minimax(MAX, depth+1);
+                test = run_minimax(MAX, depth+1, alpha, beta);
                 
+                //  отменяй ход
+                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+
                 if ( test > MinMax )
                 {
                     best_move.checker = first_pos;
@@ -433,8 +436,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                     MinMax = test;
                 }
                 
-                //  отменяй ход
-                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+                //альфа, бетта отрезка
+                alpha = max(alpha, test);
+                if (beta < alpha)
+                    continue;
+                
             }
 
             //вниз
@@ -445,8 +451,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                 do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
                 
                 //считаю
-                test = run_minimax(MAX, depth+1);
+                test = run_minimax(MAX, depth+1, alpha, beta);
                 
+                //  отменяй ход
+                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+
                 if ( test > MinMax )
                 {
                     best_move.checker = first_pos;
@@ -456,8 +465,10 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                     MinMax = test;
                 }
                 
-                //  отменяй ход
-                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+                //альфа, бетта отрезка
+                alpha = max(alpha, test);
+                if (beta < alpha)
+                    continue;
             }
 
             //вверх
@@ -468,8 +479,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                 do_move(IS_COMPUTER, i_checker, first_pos, second_pos);
                 
                 //считаю
-                test = run_minimax(MAX, depth+1);
+                test = run_minimax(MAX, depth+1, alpha, beta);
                 
+                //  отменяй ход
+                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+
                 if ( test > MinMax )
                 {
                     best_move.checker = first_pos;
@@ -478,9 +492,12 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                     
                     MinMax = test;
                 }
-                
-                //  отменяй ход
-                do_move(IS_COMPUTER, i_checker, second_pos, first_pos);
+
+                //альфа, бетта отрезка
+                alpha = max(alpha, test);
+                if (beta < alpha)
+                    continue;
+
             }
         }
         //------------------------
@@ -498,15 +515,18 @@ int five_field::run_minimax(bool is_type_moster, int depth)
             first_pos.x = coor_player[COOR_X][i_checker];
 
             //вниз
-            second_pos = define_down_pos(first_pos, IS_USER); //ошибка определения позиции
+            second_pos = define_down_pos(first_pos, IS_USER);
             if (is_can_move(first_pos, second_pos))
             {
                 //хожу
                 do_move(IS_USER, i_checker, first_pos, second_pos);
                 
                 //считаю
-                test = run_minimax(MIN, depth+1);
+                test = run_minimax(MIN, depth+1, alpha, beta);
                 
+                //  отменяй ход
+                do_move(IS_USER, i_checker, second_pos, first_pos);
+
                 if ( test < MinMax )
                 {
                     best_move.checker = first_pos;
@@ -515,9 +535,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                     
                     MinMax = test;
                 }
-                
-                //  отменяй ход
-                do_move(IS_USER, i_checker, second_pos, first_pos);
+
+                //альфа, бетта отрезка
+                beta = min(beta, test);
+                if (beta < alpha)
+                    continue;
             }
             
             //вправо
@@ -528,8 +550,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                 do_move(IS_USER, i_checker, first_pos, second_pos);
                 
                 //считаю
-                test = run_minimax(MIN, depth+1);
+                test = run_minimax(MIN, depth+1, alpha, beta);
                 
+                //  отменяй ход
+                do_move(IS_USER, i_checker, second_pos, first_pos);
+
                 if ( test < MinMax )
                 {
                     best_move.checker = first_pos;
@@ -538,9 +563,10 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                     
                     MinMax = test;
                 }
-                
-                //  отменяй ход
-                do_move(IS_USER, i_checker, second_pos, first_pos);
+                //альфа, бетта отрезка
+                beta = min(beta, test);
+                if (beta < alpha)
+                    continue;
             }
             
             //влево
@@ -551,8 +577,11 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                 do_move(IS_USER, i_checker, first_pos, second_pos);
                 
                 //считаю
-                test = run_minimax(MIN, depth+1);
+                test = run_minimax(MIN, depth+1, alpha, beta);
                 
+                //  отменяй ход
+                do_move(IS_USER, i_checker, second_pos, first_pos);
+
                 if ( test < MinMax )
                 {
                     best_move.checker = first_pos;
@@ -561,9 +590,10 @@ int five_field::run_minimax(bool is_type_moster, int depth)
                     
                     MinMax = test;
                 }
-                
-                //  отменяй ход
-                do_move(IS_USER, i_checker, second_pos, first_pos);
+                //альфа, бетта отрезка
+                beta = min(beta, test);
+                if (beta < alpha)
+                    continue; 
             }
             
         }
@@ -672,7 +702,7 @@ void five_field::move_player()
 
 void five_field::move_computer()
 {
-    run_minimax(IS_COMPUTER, 0);
+    run_minimax(IS_COMPUTER, 0, -NOT_INITIALIZE, NOT_INITIALIZE);
 }
 
 void five_field::show()

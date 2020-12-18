@@ -89,9 +89,6 @@ public:
     int max(int left_num, int right_num);
     int min(int left_num, int right_num);
     int find_num_check(Checker_pos& first_pos);
-
-    bool is_be_checker_pc_map(Checker_pos pos);
-    bool is_be_checker_user_map(Checker_pos pos);
     //****************************************
     
     bool is_move_player(int num_checker, Checker_pos& first_pos, Checker_pos& second_pos);
@@ -113,7 +110,7 @@ public:
     //оценочная ф-я
     int getHeuristicEvaluation();//- 
     //минимакс
-    int run_minimax(bool is_type_moster, int depth);//-
+    int run_minimax(bool is_type_moster, int depth, int alpha, int beta);//-
 
 //public:
     five_field(int _SIZE_MAP);
